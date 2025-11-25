@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公式识别工作台</title>
+    <link rel="stylesheet" href="{% static 'recognizer/style.css' %}">
+  </head>
+  <body>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">离线 · Django · PaddlePaddle</p>
+        <h1>公式识别工作台</h1>
+        <p class="lead">
+          上传、拖拽或粘贴包含公式的图片，获取 LaTeX 与 Python 表达式。页面已优化交互，开箱即用。
+        </p>
+      </div>
+      <div class="badge">Beta</div>
+    </header>
+
+    <main class="container">
+      <section class="card upload-card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">上传</p>
+            <h2>拖拽 / 粘贴 / 选择文件</h2>
+            <p class="muted">支持 PNG / JPG，单个文件最大 {{ max_mb }} MB。</p>
+          </div>
+          <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="primary">开始识别</button>
+          </form>
+        </div>
+        <div id="dropzone" class="dropzone">
+          <div class="drop-icon">⇪</div>
+          <div>
+            <p class="drop-title">拖拽图片到此处，或直接粘贴图片</p>
+            <p class="muted">支持多图批量上传，将自动排队识别。</p>
+          </div>
+        </div>
+        <p class="muted helper">提示：在页面中按 Ctrl/Cmd+V 粘贴剪贴板图片，或拖拽文件到上方区域。</p>
+      </section>
+
+      <section class="grid">
+        {% for result in results %}
+        <article class="card result-card">
+          <div class="thumb" style="background-image:url('{{ result.image.url }}')"></div>
+          <div class="content">
+            <div class="meta">
+              <span class="tag">置信度 {{ result.confidence|floatformat:2 }}</span>
+              <time class="muted">{{ result.created_at|date:"Y-m-d H:i" }}</time>
+            </div>
+            <div class="code-block">
+              <div class="code-head">
+                <span>LaTeX</span>
+                <button type="button" class="ghost" data-copy="{{ result.latex|escapejs }}">复制</button>
+              </div>
+              <pre>{{ result.latex }}</pre>
+            </div>
+            <div class="code-block">
+              <div class="code-head">
+                <span>Python</span>
+                <button type="button" class="ghost" data-copy="{{ result.python_expression|escapejs }}">复制</button>
+              </div>
+              <pre>{{ result.python_expression }}</pre>
+            </div>
+          </div>
+        </article>
+        {% empty %}
+        <div class="empty">上传图片后即可看到识别结果。</div>
+        {% endfor %}
+      </section>
+    </main>
+    <script src="{% static 'recognizer/app.js' %}"></script>
+  </body>
+</html>
